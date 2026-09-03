@@ -97,3 +97,11 @@ lookups use a complete schema operator key such as `any-advanced-subject` or
 prefixing readable suffixes during encoding and using the resolved
 schema-valid key in result maps. The public contract should explicitly name
 that resolved-key behavior so callers do not have to infer it from examples.
+
+List validation follows the package documentation by requiring every
+qualified topic reference to be unique across all interpretations in a list.
+That rule rejects the OPM v0.1.1 Guided Progression example, which reuses
+topics such as `math.multiplication` at different required scores in successive
+interpretations. The package contract and upstream model examples should be
+reconciled to state whether progression lists are expected to repeat topics or
+must model each topic only once per list.
