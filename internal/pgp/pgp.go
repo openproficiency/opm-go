@@ -9,12 +9,15 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/ProtonMail/go-crypto/openpgp/armor"
 	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )
+
+var signMutex sync.Mutex
 
 // Decrypt unlocks all encrypted private keys on an entity.
 func Decrypt(entity *openpgp.Entity, passphrase string) error {
@@ -46,6 +49,24 @@ func hasPrivateKey(entity *openpgp.Entity) bool {
 	return false
 }
 
+func encryptedPrivateKeys(entity *openpgp.Entity) []*packet.PrivateKey {
+	if entity == nil {
+		return nil
+	}
+
+	var privateKeys []*packet.PrivateKey
+	if entity.PrivateKey != nil && entity.PrivateKey.Encrypted {
+		privateKeys = append(privateKeys, entity.PrivateKey)
+	}
+	for _, subkey := range entity.Subkeys {
+		if subkey.PrivateKey != nil && subkey.PrivateKey.Encrypted {
+			privateKeys = append(privateKeys, subkey.PrivateKey)
+		}
+	}
+
+	return privateKeys
+}
+
 // Sign creates an ASCII-armored detached signature and returns its signer email.
 func Sign(entity *openpgp.Entity, message []byte) (string, string, error) {
 	if entity == nil {
@@ -63,6 +84,35 @@ func Sign(entity *openpgp.Entity, message []byte) (string, string, error) {
 	}
 
 	return signature.String(), signerEmail, nil
+}
+
+// SignWithPassphrase signs without leaving encrypted caller keys unlocked.
+func SignWithPassphrase(
+	entity *openpgp.Entity,
+	passphrase string,
+	message []byte,
+) (string, string, error) {
+	signMutex.Lock()
+	defer signMutex.Unlock()
+
+	encryptedKeys := encryptedPrivateKeys(entity)
+	if err := Decrypt(entity, passphrase); err != nil {
+		return "", "", err
+	}
+
+	signature, signerEmail, signErr := Sign(entity, message)
+	relockErr := packet.EncryptPrivateKeys(encryptedKeys, []byte(passphrase), nil)
+	if signErr != nil {
+		if relockErr != nil {
+			return "", "", errors.Join(signErr, fmt.Errorf("re-encrypt OpenPGP private keys: %w", relockErr))
+		}
+		return "", "", signErr
+	}
+	if relockErr != nil {
+		return "", "", fmt.Errorf("re-encrypt OpenPGP private keys: %w", relockErr)
+	}
+
+	return signature, signerEmail, nil
 }
 
 // SignatureKeyID extracts the issuer key ID from an armored signature.

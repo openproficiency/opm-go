@@ -92,6 +92,53 @@ func TestSignAndVerifyDetachedArmor(t *testing.T) {
 	assert.Equal(t, expectedEmail, verifiedBy)
 }
 
+func TestSignWithPassphraseRelocksPrivateKeys(t *testing.T) {
+	// Description
+	// Signing unlocks encrypted key material only for the operation.
+
+	// Arrange
+	entity := newTestEntity(t, "proficiency@example.com")
+	passphrase := "correct horse battery staple"
+	message := []byte(`{"name":"math"}`)
+	encryptErr := entity.EncryptPrivateKeys([]byte(passphrase), nil)
+	require.NoError(t, encryptErr)
+
+	// Act
+	signature, signedBy, err := SignWithPassphrase(entity, passphrase, message)
+
+	// Assert - Signature
+	require.NoError(t, err)
+	assert.NotEmpty(t, signature)
+	assert.Equal(t, "proficiency@example.com", signedBy)
+
+	// Assert - Key security
+	assert.True(t, entity.PrivateKey.Encrypted)
+}
+
+func TestSignWithPassphraseChecksEveryUse(t *testing.T) {
+	// Description
+	// A prior successful signature does not bypass later passphrase checks.
+
+	// Arrange
+	entity := newTestEntity(t, "proficiency@example.com")
+	passphrase := "correct horse battery staple"
+	wrongPassphrase := "incorrect passphrase"
+	message := []byte(`{"name":"math"}`)
+	encryptErr := entity.EncryptPrivateKeys([]byte(passphrase), nil)
+	require.NoError(t, encryptErr)
+	_, _, firstSignErr := SignWithPassphrase(entity, passphrase, message)
+	require.NoError(t, firstSignErr)
+
+	// Act
+	signature, signedBy, err := SignWithPassphrase(entity, wrongPassphrase, message)
+
+	// Assert
+	require.Error(t, err)
+	assert.Empty(t, signature)
+	assert.Empty(t, signedBy)
+	assert.True(t, entity.PrivateKey.Encrypted)
+}
+
 func TestVerifyRejectsChangedContent(t *testing.T) {
 	// Description
 	// A detached signature fails after its protected content changes.
