@@ -28,8 +28,7 @@ func (interpretation Interpretation) validateWithTopics(topics map[string]struct
 	if interpretation.Description == "" {
 		return errors.New("validate score interpretation: description is required")
 	}
-	operators := make(map[string]struct{})
-	if err := validateRequirements(interpretation.Requirements, operators, topics); err != nil {
+	if err := validateRequirements(interpretation.Requirements, topics); err != nil {
 		return fmt.Errorf("validate score interpretation %q: %w", interpretation.ID, err)
 	}
 
@@ -100,9 +99,9 @@ func (list List) Validate() error {
 
 func validateRequirements(
 	requirements []Requirement,
-	operators map[string]struct{},
 	topics map[string]struct{},
 ) error {
+	operators := make(map[string]struct{})
 	for _, requirement := range requirements {
 		switch typed := requirement.(type) {
 		case requiredTopic:
@@ -182,7 +181,7 @@ func validateOperator(
 		return fmt.Errorf("duplicate operator ID %q", key)
 	}
 	operators[key] = struct{}{}
-	return validateRequirements(requirements, operators, topics)
+	return validateRequirements(requirements, topics)
 }
 
 func validateAtLeast(
@@ -198,7 +197,7 @@ func validateAtLeast(
 		return fmt.Errorf("duplicate operator ID %q", key)
 	}
 	operators[key] = struct{}{}
-	return validateRequirements(requirement.Requirements, operators, topics)
+	return validateRequirements(requirement.Requirements, topics)
 }
 
 func validMinimum(value score.Score) bool {

@@ -61,7 +61,7 @@ func TestInterpretationValidateRejectsDuplicateQualifiedTopic(t *testing.T) {
 
 func TestInterpretationValidateRejectsDuplicateOperatorID(t *testing.T) {
 	// Description
-	// Resolved operator IDs are unique across one interpretation tree.
+	// Resolved operator IDs are unique among siblings in one requirements layer.
 
 	// Arrange
 	interpretation := Interpretation{
@@ -80,6 +80,79 @@ func TestInterpretationValidateRejectsDuplicateOperatorID(t *testing.T) {
 	// Assert
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), `duplicate operator ID "any-pathway"`)
+}
+
+func TestInterpretationValidateAllowsSameOperatorIDAtDifferentLevels(t *testing.T) {
+	// Description
+	// The same resolved operator key may be reused at a nested requirements layer.
+
+	// Arrange
+	interpretation := Interpretation{
+		ID:          "nested-operator-reuse",
+		Name:        "Nested Operator Reuse",
+		Description: "Operator IDs are scoped to their immediate layer.",
+		Requirements: []Requirement{
+			All{
+				ID: "shared",
+				Requirements: []Requirement{
+					All{
+						ID: "shared",
+						Requirements: []Requirement{
+							Require("math", "addition", score.Aware),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Act
+	err := interpretation.Validate()
+
+	// Assert
+	require.NoError(t, err)
+}
+
+func TestInterpretationValidateAllowsSameOperatorIDInSeparateGroups(t *testing.T) {
+	// Description
+	// Separate parent groups may each contain a child with the same resolved operator key.
+
+	// Arrange
+	interpretation := Interpretation{
+		ID:          "group-operator-reuse",
+		Name:        "Group Operator Reuse",
+		Description: "Operator IDs are scoped independently in separate groups.",
+		Requirements: []Requirement{
+			All{
+				ID: "first-parent",
+				Requirements: []Requirement{
+					Any{
+						ID: "shared-child",
+						Requirements: []Requirement{
+							Require("math", "addition", score.Aware),
+						},
+					},
+				},
+			},
+			All{
+				ID: "second-parent",
+				Requirements: []Requirement{
+					Any{
+						ID: "shared-child",
+						Requirements: []Requirement{
+							Require("math", "subtraction", score.Aware),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Act
+	err := interpretation.Validate()
+
+	// Assert
+	require.NoError(t, err)
 }
 
 func TestInterpretationValidateRejectsMissingOperatorID(t *testing.T) {
