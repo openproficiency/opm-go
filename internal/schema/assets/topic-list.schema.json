@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "topic-list.schema.json",
+
+  "title": "Topic List",
+  "description": "A collection of topics that define a knowledge domain declared by a particular issuer.",
+  "type": "object",
+
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema version",
+      "type": "string"
+    },
+
+    "owner": {
+      "description": "The entity that maintains this topic list. Domain name. Ex: 'example.com'",
+      "type": "string",
+      "format": "hostname",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]{2,}$"
+    },
+
+    "name": {
+      "description": "A name to define scope for this topic list. Kebab case. Ex: 'my-list-name'",
+      "type": "string",
+      "format": "kebab-case",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+
+    "description": {
+      "description": "A brief description of the knowledge domain covered by this topic list.",
+      "type": "string",
+      "maxLength": 100
+    },
+
+    "version": {
+      "description": "Version of this topic list. Semantic versioning format. Ex: '1.0.0'",
+      "type": "string",
+      "format": "semver",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+
+    "issued-at": {
+      "description": "ISO 8601 timestamp of when this version was created.",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "signature": {
+      "description": "ASCII-armored detached OpenPGP (GPG) signature over the protected fields of this topic list, used to verify authenticity.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^-----BEGIN PGP SIGNATURE-----\\r?\\n(?:[^\\n]+\\r?\\n)*\\r?\\n(?:[A-Za-z0-9+/]+=*\\r?\\n)+=[A-Za-z0-9+/]{4}\\r?\\n-----END PGP SIGNATURE-----\\r?\\n?$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+
+    "signed-by": {
+      "description": "Email address of the GPG key that produced 'signature'. For convenience only. Verify with signature. Convention: 'proficiency@<owner>'.",
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "email"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+
+    "topics": {
+      "description": "Map of topic identifiers to their definitions",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9]+(?:-[a-z0-9]+)*$": {
+          "$ref": "https://raw.githubusercontent.com/openproficiency/model/refs/heads/main/schemas/topic.schema.json"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "dependencies": {
+      "description": "Map of shorthand aliases to external topic list references",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z0-9]+(?:-[a-z0-9]+)*$": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Shorthand reference: a fully qualified name 'owner/name@version' (e.g. 'example.com/math@0.1.0') for registry lookup.",
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]{2,}/[a-z0-9]+(?:-[a-z0-9]+)*@(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+            },
+            {
+              "type": "object",
+              "description": "Long-form reference using explicit fields. Optionally provides exact locations, removing dependency on any registry.",
+              "properties": {
+                "topic-list-owner": {
+                  "description": "The owner of the referenced topic list. Domain name. Ex: 'example.com'",
+                  "type": "string",
+                  "format": "hostname",
+                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]{2,}$"
+                },
+                "topic-list-name": {
+                  "description": "The name of the referenced topic list. Kebab case. Ex: 'math'",
+                  "type": "string",
+                  "format": "kebab-case",
+                  "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                },
+                "topic-list-version": {
+                  "description": "The version of the referenced topic list. Semantic versioning format. Ex: '0.1.0'",
+                  "type": "string",
+                  "format": "semver",
+                  "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                },
+                "locations": {
+                  "description": "Optional list of exact HTTP(S) URLs where this topic list version can be retrieved. Removes dependency on any registry. Not included in the issuer's signature verification, so it may be amended by redistributors without invalidating the signature.",
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "required": ["topic-list-owner", "topic-list-name", "topic-list-version"],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "required": ["owner", "name", "description", "version", "issued-at", "signature", "signed-by", "topics"],
+  "additionalProperties": false
+}
