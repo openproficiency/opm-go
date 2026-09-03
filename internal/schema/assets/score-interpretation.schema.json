@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "score-interpretation.schema.json",
+
+  "title": "Score Interpretation",
+  "description": "A standardized interpretation of a set of topic scores, typically one of several in a score interpretation list.",
+  "type": "object",
+
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema version",
+      "type": "string"
+    },
+
+    "id": {
+      "description": "Unique identifier for this score interpretation. Kebab case. Ex: 'my-interpretation-id'",
+      "type": "string",
+      "format": "kebab-case",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+
+    "name": {
+      "description": "A friendly name used for display",
+      "type": "string"
+    },
+
+    "description": {
+      "description": "A brief explanation of this score interpretation",
+      "type": "string"
+    },
+
+    "requirements": {
+      "description": "A logical expression of topics and required scores for this interpretation. Supports logical operators (all, any, at-least-N) for composing requirements. A flat topic-score map is treated as implicit 'all'. Operators may have a unique identifier suffix (e.g., 'all-abc1', 'any-abc2', 'at-least-3-abc3'). Topic keys always contain a dot (dependency.topic) so they cannot conflict with operator keywords.",
+      "$id": "requirements-expression",
+      "type": "object",
+      "patternProperties": {
+        "^all(-[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?$": {
+          "description": "All expressions must be satisfied. Each entry in the value is a separate operand.",
+          "$ref": "requirements-expression"
+        },
+        "^any(-[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?$": {
+          "description": "At least one expression must be satisfied. Each entry in the value is a separate operand.",
+          "$ref": "requirements-expression"
+        },
+        "^at-least-[1-9][0-9]*(-[a-z][a-z0-9]*(?:-[a-z0-9]+)*)?$": {
+          "description": "At least N expressions must be satisfied, where N is encoded in the operator name. Each entry in the value is a separate operand.",
+          "$ref": "requirements-expression"
+        },
+        "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)+$": {
+          "type": "string",
+          "description": "Score level required for the topic"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+
+  "required": ["name", "description", "requirements"],
+  "additionalProperties": false
+}

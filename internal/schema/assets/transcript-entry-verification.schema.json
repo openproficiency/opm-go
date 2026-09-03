@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "transcript-entry-verification.schema.json",
+
+  "title": "Transcript Entry Verification Response",
+  "description": "Response envelope for batch transcript entry verification lookups.",
+
+  "type": "object",
+  "patternProperties": {
+    "^[a-f0-9]{64}$": {
+      "oneOf": [{ "$ref": "#/$defs/valid-entry" }, { "$ref": "#/$defs/invalid-entry" }]
+    }
+  },
+  "additionalProperties": false,
+
+  "$defs": {
+    "valid-entry": {
+      "type": "object",
+      "properties": {
+        "valid": {
+          "const": true
+        }
+      },
+      "required": ["valid"],
+      "additionalProperties": false
+    },
+
+    "invalid-entry": {
+      "type": "object",
+      "properties": {
+        "valid": {
+          "const": false
+        },
+        "reason": {
+          "description": "Issuer provided reason for invalid status.",
+          "type": "string",
+          "enum": ["dishonesty", "policy-violation", "incorrect", "other"]
+        },
+        "invalidated-at": {
+          "description": "ISO 8601 timestamp indicating when validity ended.",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["valid", "invalidated-at"],
+      "additionalProperties": false
+    }
+  }
+}

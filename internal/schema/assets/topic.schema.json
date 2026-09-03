@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "topic.schema.json",
+
+  "title": "Topic",
+  "description": "A defined unique area of knowledge",
+
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema version",
+      "type": "string"
+    },
+
+    "id": {
+      "description": "Unique identifier for this topic within its topic list. Kebab case. Ex: 'my-topic-id'",
+      "type": "string",
+      "format": "kebab-case",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+
+    "display-name": {
+      "description": "Optional human-friendly name for this topic.",
+      "type": "string",
+      "maxLength": 100
+    },
+
+    "description": {
+      "description": "A brief explanation of the knowledge represented by this topic. Max 100 characters.",
+      "type": "string",
+      "maxLength": 100
+    },
+
+    "docs-url": {
+      "description": "HTTP(S) URL to a reference that explains this topic.",
+      "type": "string",
+      "format": "uri"
+    },
+
+    "validity-period": {
+      "description": "The suggested validity period when assigning a score to this topic. Min 30 days. Default is 732 days (~2 years).",
+      "type": "integer",
+      "minimum": 1,
+      "default": 732
+    },
+
+    "subtopics": {
+      "description": "List of topics that directly represent proficiency in a subspace of this topic.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Reference to a topic identifier"
+          },
+          {
+            "$ref": "#"
+          }
+        ]
+      },
+      "uniqueItems": true
+    },
+
+    "pretopics": {
+      "description": "List of topics required as prerequisites before beginning to obtain proficiency in this topic.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Reference to a topic identifier or external topic (e.g., 'namespace.topic-id')"
+      },
+      "uniqueItems": true
+    }
+  },
+
+  "required": ["description"],
+  "additionalProperties": false
+}

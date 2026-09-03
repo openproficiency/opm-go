@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "transcript-entry.schema.json",
+
+  "title": "Transcript Entry",
+  "description": "A permanent record of a user's proficiency score for a single topic.",
+  "type": "object",
+
+  "properties": {
+    "$schema": {
+      "description": "JSON Schema version",
+      "type": "string"
+    },
+
+    "user-email": {
+      "description": "The user's email address to act as a unique identifier. Ex: 'user@example.com'",
+      "type": "string",
+      "format": "email"
+    },
+
+    "topic": {
+      "description": "The topic identifier for which proficiency is being recorded. Kebab case. Ex: 'addition'",
+      "type": "string",
+      "format": "kebab-case",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+
+    "topic-list": {
+      "description": "Name of the topic list that defines the topic. Kebab case. Ex: 'math'",
+      "type": "string",
+      "format": "kebab-case",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+
+    "topic-list-version": {
+      "description": "Version of the topic list. Semantic versioning format. Ex: '1.0.0'",
+      "type": "string",
+      "format": "semver",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+    },
+
+    "topic-list-owner": {
+      "description": "Domain name of the entity that maintains the topic list. Ex: 'example.com'",
+      "type": "string",
+      "format": "hostname",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]{2,}$"
+    },
+
+    "topic-list-sources": {
+      "description": "Optional list of URLs where the topic list is hosted. The issuer's original is recommended first.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+
+    "score": {
+      "description": "The degree of proficiency for a specific topic. [unaware, aware, familiar, competent, fluent]",
+      "type": "string",
+      "enum": ["unaware", "aware", "familiar", "competent", "fluent"]
+    },
+
+    "issued-at": {
+      "description": "ISO 8601 timestamp of when this topic's score was recorded.",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "valid-until": {
+      "description": "ISO 8601 timestamp of when this topic's score expires.",
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "issued-by": {
+      "description": "Domain name of the entity that issued this transcript entry. Ex: 'example.com'",
+      "type": "string",
+      "format": "hostname",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z]{2,}$"
+    },
+
+    "verification-url": {
+      "description": "HTTPS URL to the issuer verification API endpoint. Used for additional confirmation of this transcript entry.",
+      "type": "string",
+      "format": "uri"
+    },
+
+    "signature": {
+      "description": "ASCII-armored detached OpenPGP (GPG) signature over the protected fields of this transcript entry, used to verify authenticity.",
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^-----BEGIN PGP SIGNATURE-----\\r?\\n(?:[^\\n]+\\r?\\n)*\\r?\\n(?:[A-Za-z0-9+/]+=*\\r?\\n)+=[A-Za-z0-9+/]{4}\\r?\\n-----END PGP SIGNATURE-----\\r?\\n?$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+
+    "signed-by": {
+      "description": "Email address of the GPG key that produced 'signature'. For convenience only. Verify with signature. Convention: 'proficiency@<owner>'.",
+      "type": "string",
+      "format": "email"
+    }
+  },
+
+  "required": [
+    "user-email",
+    "topic",
+    "topic-list",
+    "topic-list-version",
+    "topic-list-owner",
+    "score",
+    "issued-at",
+    "valid-until",
+    "issued-by",
+    "signature",
+    "signed-by"
+  ],
+  "additionalProperties": false
+}
