@@ -1,0 +1,152 @@
+name: Publish package
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "**/model/**"
+      - "**/schema/**"
+      - "**/schemas/**"
+      - "VERSION"
+      - ".github/workflows/publish-package.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-package
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Verify module files are tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          test -z "$(git status --porcelain -- go.mod go.sum)"
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Build packages
+        run: go build ./...
+
+      - name: Run tests with race detector
+        run: go test -race ./...
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Read release metadata
+        id: release
+        shell: bash
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          semver='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          if [[ ! "$version" =~ $semver ]]; then
+            echo "::error file=VERSION::VERSION must contain a valid semantic version without a leading v"
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "module=$(go list -m)" >> "$GITHUB_OUTPUT"
+
+      - name: Create immutable annotated tag
+        shell: bash
+        env:
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            tagged_commit="$(git rev-list -n 1 "$TAG")"
+            if [[ "$tagged_commit" != "$GITHUB_SHA" ]]; then
+              echo "::error::Tag $TAG already points to $tagged_commit, not $GITHUB_SHA"
+              exit 1
+            fi
+            if [[ "$(git cat-file -t "refs/tags/$TAG")" != "tag" ]]; then
+              echo "::error::Tag $TAG already exists but is not annotated"
+              exit 1
+            fi
+            echo "Tag $TAG already points to this commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "$TAG" "$GITHUB_SHA" --message "Release $TAG"
+          git push origin "refs/tags/$TAG"
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+          else
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --generate-notes \
+              --title "$TAG"
+          fi
+
+      - name: Request public Go proxy listing
+        shell: bash
+        env:
+          MODULE: ${{ steps.release.outputs.module }}
+          TAG: ${{ steps.release.outputs.tag }}
+          GOPROXY: https://proxy.golang.org
+          GOPRIVATE: ""
+          GONOPROXY: ""
+          GONOSUMDB: ""
+        run: |
+          for attempt in {1..12}; do
+            if timeout 30s go list -m "$MODULE@$TAG"; then
+              exit 0
+            fi
+
+            if [[ "$attempt" -lt 12 ]]; then
+              echo "Go proxy has not listed $MODULE@$TAG yet; retrying in 10 seconds."
+              sleep 10
+            fi
+          done
+
+          echo "::error::Go proxy did not list $MODULE@$TAG after 12 attempts"
+          exit 1
