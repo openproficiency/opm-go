@@ -2,6 +2,7 @@
   "name": "opm-go",
   "private": true,
   "scripts": {
+    "prevendor:schema": "npm ci --ignore-scripts",
     "vendor:schema": "node scripts/vendor-schema.mjs"
   },
   "devDependencies": {

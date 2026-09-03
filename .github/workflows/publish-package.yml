@@ -45,7 +45,6 @@ jobs:
 
       - name: Vendor schemas
         run: |
-          npm ci
           npm run vendor:schema
           git diff --exit-code -- internal/schema/assets
           test -z "$(git status --porcelain -- internal/schema/assets)"
