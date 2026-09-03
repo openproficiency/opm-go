@@ -1,0 +1,10 @@
+{
+  "name": "opm-go",
+  "private": true,
+  "scripts": {
+    "vendor:schema": "node scripts/vendor-schema.mjs"
+  },
+  "devDependencies": {
+    "@openproficiency/schema": "0.1.1"
+  }
+}
