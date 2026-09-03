@@ -287,7 +287,7 @@ func main() {
 				Requirements: []si.Requirement{
 					// Math topics
 					si.Require("std-math", "addition", score.Competent),
-					si.Require("std-math", "subtraction", score.Competent)
+					si.Require("std-math", "subtraction", score.Competent),
 					// Pedagogy topics
 					si.Require("std-pedagogy", "classroom-management", score.Competent),
 				},
@@ -375,8 +375,8 @@ func main() {
 	_ = importedInterpretationList.UnmarshalYAML(yamlData)
 
 	// Show Result
-	fmt.PrintLn(len(importedInterpretationList.Name)) // math-levels
-	fmt.PrintLn(len(importedInterpretationList.Intepretations)) // 1
+	fmt.Println(importedInterpretationList.Name) // math-levels
+	fmt.Println(len(importedInterpretationList.Interpretations)) // 1
 	fmt.Println(importedInterpretationList.Interpretations["arithmetic-1"].Name) // Arithmetic - Level 1
 }
 ```
@@ -444,8 +444,8 @@ func main() {
 	_ = importedInterpretationList.UnmarshalJSON(jsonData)
 
 	// Show Result
-	fmt.PrintLn(len(importedInterpretationList.Name)) // math-levels
-	fmt.PrintLn(len(importedInterpretationList.Intepretations)) // 1
+	fmt.Println(importedInterpretationList.Name) // math-levels
+	fmt.Println(len(importedInterpretationList.Interpretations)) // 1
 	fmt.Println(importedInterpretationList.Interpretations["arithmetic-1"].Name) // Arithmetic - Level 1
 }
 ```
@@ -589,7 +589,7 @@ interpretation.Requirements = []scoreinterpretation.Requirement{
 			scoreinterpretation.Require("math", "trigonometry", score.Competent),
 		},
 	},
-	scoreinterpretation.All{
+	scoreinterpretation.Any{
 		ID: "any-pathway",
 		Requirements: []scoreinterpretation.Requirement{
 			scoreinterpretation.Require("math", "addition", score.Competent),

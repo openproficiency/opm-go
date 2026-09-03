@@ -77,7 +77,7 @@ atomicTopics := topicList.AtomicTopics()
 
 fmt.Println(len(atomicTopics))       // 1
 fmt.Println(atomicTopics["calculus"].ID) // calculus
-fmt.PrintLn(len(groupTopics["calculus"])) // 0
+fmt.Println(len(atomicTopics["calculus"].Subtopics)) // 0
 ```
 
 ### `List.GroupTopics()`
@@ -90,7 +90,7 @@ groupTopics := topicList.GroupTopics()
 
 fmt.Println(len(groupTopics))          // 2
 fmt.Println(groupTopics["arithmetic"].ID) // arithmetic
-fmt.PrintLn(len(groupTopics["arithmetic"])) // 4
+fmt.Println(len(groupTopics["arithmetic"].Subtopics)) // 4
 ```
 
 ### `ComplexityReport(List)`
