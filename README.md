@@ -267,5 +267,3 @@ Full documentation lives in the [`docs`](docs/) directory.
 | [`score`](docs/score.md)                              | Ordered OPM score values and string conversion.                    |
 | [`transcript`](docs/transcript.md)                    | Unsigned storage and signed transcript exports.                    |
 | [`scoreinterpretation`](docs/score-interpretation.md) | Score interpretation requirements, lists, evaluation, and signing. |
-| [`model`](docs/model.md)                              | Targeted OPM version and embedded copies of its JSON Schemas.      |
-| [`schema`](docs/schema.md)                            | Bundled OPM JSON Schemas and validation helpers.                   |
