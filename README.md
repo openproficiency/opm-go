@@ -25,8 +25,16 @@ A Go library for the [Open Proficiency Model](https://github.com/openproficiency
 
 ## Install
 
+Install latest version
+
 ```bash
 go get github.com/openproficiency/opm-go@latest
+```
+
+View Available Versions
+
+```
+go list -m -versions github.com/openproficiency/opm-go
 ```
 
 Requires Go 1.23 or later.
