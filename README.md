@@ -46,7 +46,7 @@ Requires Go 1.23 or later.
 
 ### Load from files
 
-`math.yml`
+`math.yml` [[Spec: Topic List]](https://github.com/openproficiency/model/blob/main/specs/topic-list.md)
 
 ```yaml
 owner: example.com
@@ -67,7 +67,7 @@ topics:
     description: Splitting a quantity into equal parts
 ```
 
-`math-levels.yml`
+`math-levels.yml` [[Spec: Interpretation List]](https://github.com/openproficiency/model/blob/main/specs/score-interpretation-list.md)
 
 ```yaml
 owner: example.com
@@ -90,7 +90,7 @@ dependencies:
   math: example.com/math@0.1.0
 ```
 
-`transcript-entries.yml`
+`transcript-entries.yml` [[Spec: Transcript Entry]](https://github.com/openproficiency/model/blob/main/specs/transcript-entry.md)
 
 ```yaml
 - user-email: learner@example.com
@@ -130,6 +130,8 @@ dependencies:
   valid-until: 2028-09-01T00:00:00Z
   issued-by: example.com
 ```
+
+Example Code
 
 ```go
 package main
