@@ -151,17 +151,18 @@ jobs:
           GOPRIVATE: ""
           GONOPROXY: ""
           GONOSUMDB: ""
+          ATTEMPTS: 5
         run: |
-          for attempt in {1..12}; do
+          for ((attempt = 1; attempt <= ATTEMPTS; attempt++)); do
             if timeout 30s go list -m "$MODULE@$TAG"; then
               exit 0
             fi
 
-            if [[ "$attempt" -lt 12 ]]; then
+            if [[ "$attempt" -lt "$ATTEMPTS" ]]; then
               echo "Go proxy has not listed $MODULE@$TAG yet; retrying in 10 seconds."
               sleep 10
             fi
           done
 
-          echo "::error::Go proxy did not list $MODULE@$TAG after 12 attempts"
+          echo "::error::Go proxy did not list $MODULE@$TAG after $ATTEMPTS attempts"
           exit 1
