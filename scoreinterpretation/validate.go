@@ -64,7 +64,6 @@ func (list List) Validate() error {
 	if err := validateDependencies(list.Dependencies); err != nil {
 		return err
 	}
-	qualifiedTopics := make(map[string]struct{})
 	for key, interpretation := range list.Interpretations {
 		if interpretation.ID != key {
 			return fmt.Errorf(
@@ -73,7 +72,7 @@ func (list List) Validate() error {
 				interpretation.ID,
 			)
 		}
-		if err := interpretation.validateWithTopics(qualifiedTopics); err != nil {
+		if err := interpretation.Validate(); err != nil {
 			return err
 		}
 		if err := validateAliases(interpretation.Requirements, list.Dependencies); err != nil {

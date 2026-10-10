@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestListValidateRejectsQualifiedTopicReuseAcrossInterpretations(t *testing.T) {
+func TestListValidateAllowsQualifiedTopicReuseAcrossInterpretations(t *testing.T) {
 	// Description
-	// A qualified topic may appear only once across all interpretations in a list.
+	// Separate interpretations may require different scores for the same qualified topic.
 
 	// Arrange
 	list := validInterpretationList()
@@ -27,8 +27,7 @@ func TestListValidateRejectsQualifiedTopicReuseAcrossInterpretations(t *testing.
 	err := list.Validate()
 
 	// Assert
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), `duplicate qualified topic "math.addition"`)
+	require.NoError(t, err)
 }
 
 func TestInterpretationValidateRejectsDuplicateQualifiedTopic(t *testing.T) {

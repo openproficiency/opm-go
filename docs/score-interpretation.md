@@ -599,24 +599,19 @@ interpretation.Requirements = []scoreinterpretation.Requirement{
 err := interpretation.Validate()
 ```
 
-#### Duplicate qualified topic
+#### Duplicate requirements in the same intepretation
 
 ```go
-interpretationList.Interpretations = map[string]scoreinterpretation.Interpretation{
-	"arithmetic-1": {
+interpretation.Requirements = []scoreinterpretation.Requirement{
+	scoreinterpretation.Require("math", "addition", score.Competent),
+	scoreinterpretation.Any{
 		ID: "arithmetic-1",
-		Requirements: []scoreinterpretation.Requirement{
-			scoreinterpretation.Require("math", "addition", score.Competent),
-		},
-	},
-	"arithmetic-2": {
-		ID: "arithmetic-2",
 		Requirements: []scoreinterpretation.Requirement{
 			scoreinterpretation.Require("math", "addition", score.Fluent),
 		},
 	},
 }
-err := interpretationList.Validate()
+err := interpretation.Validate()
 ```
 
 ### Development Notes
@@ -630,7 +625,7 @@ err := interpretationList.Validate()
   operators.
 - Every dependency alias must identify a declared dependency.
 - Operator IDs must be unique within an interpretation.
-- Qualified topic references must be unique across a list's interpretations.
+- Qualified topic references must be unique within an interpretation.
 - `AtLeast.MinCount` must be positive.
 - `MinCount` may exceed the requirement count, but the operator can never pass.
 
