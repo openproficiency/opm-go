@@ -37,7 +37,7 @@ View Available Versions
 go list -m -versions github.com/openproficiency/opm-go
 ```
 
-Requires Go 1.23 or later.
+Requires Go 1.25 or later.
 
 ## Get Started
 
